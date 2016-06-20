@@ -1,0 +1,242 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>things-scene-controlchart Demo</title>
+    <script src="../../webcomponentsjs/webcomponents-lite.min.js"></script>
+
+    <link rel="import" href="../../things-scene-viewer/things-scene-viewer.html">
+    <link rel="import" href="../../things-scene-viewer/things-scene-layer.html">
+    <link rel="import" href="../../things-scene-viewer/things-scene-handler.html">
+
+    <link rel="import" href="../../things-designer-elements/things-editor-color.html">
+    <link rel="import" href="../../things-designer-elements/things-editor-color-stops.html">
+    <link rel="import" href="../../things-scene-modeler/things-scene-properties.html">
+
+    <link rel="import" href="./things-scene-controlchart.html">
+
+    <style is="custom-style">
+
+    @font-face {
+      font-family: "Bitstream Vera Serif Bold";
+      src: url("fonts/VeraSeBd.ttf");
+    }
+
+    things-scene-viewer {
+      display: block;
+      width: 640px;
+      height: 480px;
+    }
+    </style>
+  </head>
+  <body unresolved>
+
+    <template is="dom-bind" id="app">
+      <p>An example of <code>&lt;things-scene-controlchart&gt;</code>:</p>
+
+      <things-scene-viewer id='scene'
+                           scene='{{scene}}'
+                           selected='{{selected}}'
+                           model='[[model]]'
+                           mode="1">
+        <things-scene-layer type="selection-layer"></things-scene-layer>
+        <things-scene-layer type="modeling-layer"></things-scene-layer>
+        <things-scene-handler type="text-editor"></things-scene-handler>
+        <things-scene-handler type="move-handler"></things-scene-handler>
+      </things-scene-viewer>
+
+      <things-scene-properties scene="[[scene]]"
+                               selected="[[selected]]"
+                               model="{{target}}"
+                               bounds="{{bounds}}">
+        <fieldset>
+          <legend>controlchart properties</legend>
+          <label>top title</label>
+          <input type="text" value="{{target.topTitle::change}}"/>
+          <label>bottom title</label>
+          <input type="text" value="{{target.bottomTitle::change}}"/>
+          <label>left title</label>
+          <input type="text" value="{{target.leftTitle::change}}"/>
+          <label>USL</label>
+          <input type="number" value-as-number="{{target.usl::change}}" min="0" max="1000" step="1"/>
+          <label>LSL</label>
+          <input type="number" value-as-number="{{target.lsl::change}}" min="0" max="1000" step="1"/>
+          <label>TARGET</label>
+          <input type="number" value-as-number="{{target.target::change}}" min="0" max="1000" step="1"/>
+          <input type="checkbox" checked="{{target.show3SigmaLine::change}}" required>show 3-sigma line
+          <input type="checkbox" checked="{{target.showNormalLine::change}}" required>show normal line
+          <input type="checkbox" checked="{{target.showSpecLimit::change}}" required>show spec line
+          <input type="checkbox" checked="{{target.showGridLine::change}}" required>show grid line
+          <input type="checkbox" checked="{{target.showBarLabel::change}}" required>show bar label
+          <input type="checkbox" checked="{{target.showSubXAxis::change}}" required>show sub Xaxis
+          <input type="checkbox" checked="{{target.autoScaleX::change}}" required>auto scale-x
+          <input type="checkbox" checked="{{target.autoScaleY::change}}" required>auto scale-y
+          <label>precision</label>
+          <input type="number" value-as-number="{{target.precision::change}}" min="0" max="10" step="1"/>
+          <label>min-x</label>
+          <input type="number" value-as-number="{{target.minX::change}}" min="0" max="10" step="1"/>
+          <label>max-x</label>
+          <input type="number" value-as-number="{{target.maxX::change}}" min="0" max="1000" step="1"/>
+          <label>min-y</label>
+          <input type="number" value-as-number="{{target.minY::change}}" min="0" max="10" step="1"/>
+          <label>max-y</label>
+          <input type="number" value-as-number="{{target.maxY::change}}" min="0" max="1000" step="1"/>
+          <label>step-y</label>
+          <input type="number" value-as-number="{{target.stepY::change}}" min="0" max="10" step="1"/>
+        </fieldset>
+      </things-scene-properties>
+
+    </template>
+
+    <script>
+      window.addEventListener('WebComponentsReady', function(e) {
+        var app = document.querySelector('#app')
+
+        app.model = {
+          // fillStyle: '#0EB22A',
+          width: 1200,
+          height: 600,
+          components: [{
+            type: 'controlchart',
+            top: 10,
+            left: 10,
+            width: 600,
+            height: 400,
+            topTitle: 'Top Title',
+            bottomTitle: 'Bottom Title',
+            leftTitle: 'Left Title',
+            target: 125,
+            usl: 145,
+            lsl: 105,
+            show3SigmaLine: true,
+            showNormalLine: true,
+            showSpecLimit: true,
+            showGridLine: true,
+            showBarLabel: true,
+            showSubXAxis: false,
+            precision: 0,   // 차트 표시 소수점 자릿수
+            autoScaleX: true,   // X축 최소값, 최대값 자동계산 여부(true : 자동, false : 설정)
+            autoScaleY: true,   // Y축 최소값, 최대값 자동계산 여부(true : 자동, false : 설정)
+            minX: 100,  // 사용자 정의 X축 최소값
+            maxX: 150,   // 사용자 정의 X축 최대값
+            minY: 0,  // 사용자 정의 Y축 최소값
+            maxY: 25, // 사용자 정의 Y축 최대값
+            stepY: 5,   //Y축 max 최소값
+            data: [
+              125.36,
+              126.66,
+              130.28,
+              133.74,
+              126.92,
+              120.85,
+              119.42,
+              128.61,
+              123.53,
+              130.15,
+              126.02,
+              116.65,
+              125.24,
+              126.84,
+              125.95,
+              114.41,
+              138.62,
+              127.4,
+              127.59,
+              123.57,
+              133.76,
+              124.6,
+              113.48,
+              128.6,
+              121.04,
+              119.42,
+              120.83,
+              136.53,
+              120.4,
+              136.58,
+              121.73,
+              132.72,
+              109.25,
+              125.42,
+              117.67,
+              124.01,
+              118.74,
+              128.99,
+              131.11,
+              112.27,
+              118.76,
+              119.15,
+              122.42,
+              122.22,
+              134.71,
+              126.22,
+              130.33,
+              120.52,
+              126.88,
+              117.4,
+              123.72,
+              124.56,
+              116.03,
+              121.06,
+              124.5,
+              131.93,
+              133.25,
+              122.08,
+              117.88,
+              126.1,
+              125.26,
+              125.03,
+              122.74,
+              117.57,
+              120.63,
+              120.83,
+              132.6,
+              131.25,
+              130.83,
+              116.68,
+              114.99,
+              126.69,
+              121.57,
+              124.43,
+              137.04,
+              131.48,
+              127.92,
+              114.08,
+              125.45,
+              124.65,
+              127.93,
+              123.88,
+              114.25,
+              123.68,
+              117.06,
+              130.69,
+              119.8,
+              119.72,
+              110.99,
+              123.12,
+              125.37,
+              127.01,
+              121.31,
+              119.26,
+              124.52,
+              128.85,
+              123.87,
+              122.87,
+              126.61,
+              117.96
+            ]
+          }]
+        }
+      });
+    </script>
+  </body>
+</html>
