@@ -26,6 +26,7 @@
     "web-component-tester": "^4.0.0",
     "things-scene-viewer": "ThingsElements/things-scene-viewer",
     "things-scene-modeler": "ThingsElements/things-scene-modeler",
-    "things-designer-elements": "ThingsElements/things-designer-elements"
+    "things-designer-elements": "ThingsElements/things-designer-elements",
+    "things-scene-chartjs": "ThingsElements/things-scene-chartjs"
   }
 }
