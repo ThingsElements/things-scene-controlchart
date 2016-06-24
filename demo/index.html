@@ -104,6 +104,57 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       window.addEventListener('WebComponentsReady', function(e) {
         var app = document.querySelector('#app')
 
+        var data = {
+            labels: ["January", "February", "March", "April", "May", "June", "July"],
+            datasets: [
+              {
+                label: "My First dataset",
+                fill: false,
+                lineTension: 0.1,
+                backgroundColor: "rgba(102,102,102,0.4)",
+                borderColor: "rgba(102,102,102,1)",
+                borderCapStyle: 'butt',
+                borderDash: [],
+                borderDashOffset: 0.0,
+                borderJoinStyle: 'miter',
+                pointBorderColor: "rgba(102,102,102,1)",
+                pointBackgroundColor: "rgba(220,220,220,1)",
+                pointBorderWidth: 5,
+                pointHoverRadius: 5,
+                pointHoverBackgroundColor: "rgba(102,102,102,1)",
+                pointHoverBorderColor: "rgba(220,220,220,1)",
+                pointHoverBorderWidth: 2,
+                pointRadius: 1,
+                pointHitRadius: 10,
+                data : []
+              }
+            ],
+            spcData: {
+              ucl: [70, 70, 70, 65, 65, 65, 65],
+              lcl: [50, 50, 50, 55, 55, 55, 55],
+              cl: [60, 60, 60, 60, 60, 60, 60]
+            },
+            seriesData : [
+              [65, 59, 80, 81, 56, 55, 40]
+            ]
+        };
+
+        var options = {
+            scales : {
+              xAxes : [{
+                type : 'category',
+                gridLines : {
+                  display: false
+                }
+              }],
+              yAxes: [{
+                gridLines : {
+                  // display: false
+                }
+              }]
+            }
+        };
+
         app.model = {
           // fillStyle: '#0EB22A',
           width: 1200,
@@ -114,50 +165,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             top : 40,
             width : 600,
             height : 400,
-            // responsive : false,
             chart : {
               type : 'controlChart',
-              data : {
-                labels: ["January", "February", "March", "April", "May", "June", "July"],
-                datasets: [
-                  {
-                    label: "My First dataset",
-                    fill: false,
-                    lineTension: 0.1,
-                    backgroundColor: "rgba(102,102,102,0.4)",
-                    borderColor: "rgba(102,102,102,1)",
-                    borderCapStyle: 'butt',
-                    borderDash: [],
-                    borderDashOffset: 0.0,
-                    borderJoinStyle: 'miter',
-                    pointBorderColor: "rgba(102,102,102,1)",
-                    pointBackgroundColor: "#fff",
-                    pointBorderWidth: 1,
-                    pointHoverRadius: 5,
-                    pointHoverBackgroundColor: "rgba(102,102,102,1)",
-                    pointHoverBorderColor: "rgba(220,220,220,1)",
-                    pointHoverBorderWidth: 2,
-                    pointRadius: 1,
-                    pointHitRadius: 10,
-                    data : []
-                  }
-                ],
-                options: {
-                  scales : {
-                    xAxes : [{
-                      type : 'category'
-                    }]
-                  }
-                },
-                spcData: {
-                  ucl: [70, 70, 70, 65, 65, 65, 65],
-                  lcl: [50, 50, 50, 55, 55, 55, 55],
-                  cl: [60, 60, 60, 60, 60, 60, 60]
-                },
-                seriesData : [
-                  [65, 59, 80, 81, 56, 55, 40]
-                ]
-              }
+              data : data,
+              options: options
             }
           }]
         }

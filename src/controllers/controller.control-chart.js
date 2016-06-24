@@ -32,13 +32,13 @@ Chart.defaults.controlChart.legend = {
 };
 
 function initControlChart(chartInstance) {
-  chartInstance.seriesData = [];
+  chartInstance.chartSeries = [];
 
   for(let dataset of chartInstance.data.datasets) {
-    chartInstance.seriesData.push(dataset);
+    chartInstance.chartSeries.push(dataset);
   }
 
-  chartInstance.controlLimits = {
+  chartInstance.controlLimitSeries = {
     ucl : null,
     cl : null,
     lcl : null
@@ -89,7 +89,7 @@ function generateUpperControlLine (chartInstance) {
     data = spcData.ucl;
   }
 
-  chartInstance.controlLimits.ucl = generateSPCLine(chartInstance, data);
+  chartInstance.controlLimitSeries.ucl = generateSPCLine(chartInstance, data);
 }
 
 function generateLowerControlLine(chartInstance) {
@@ -101,7 +101,7 @@ function generateLowerControlLine(chartInstance) {
     data = spcData.lcl;
   }
 
-  chartInstance.controlLimits.lcl = generateSPCLine(chartInstance, data);
+  chartInstance.controlLimitSeries.lcl = generateSPCLine(chartInstance, data);
 }
 
 function generateCenterLine(chartInstance) {
@@ -113,7 +113,7 @@ function generateCenterLine(chartInstance) {
     data = spcData.cl;
   }
 
-  chartInstance.controlLimits.cl = generateSPCLine(chartInstance, data, {
+  chartInstance.controlLimitSeries.cl = generateSPCLine(chartInstance, data, {
     borderColor: "rgba(25,220,150,1)",
     borderWidth: 2,
     borderDash: [0]
@@ -153,13 +153,13 @@ function generateSPCLine(chart, data, options) {
 
 function updateSPCDatas(chartInstance) {
   var spcData = chartInstance.data.spcData;
-  let controlLimits = chartInstance.controlLimits;
+  let controlLimits = chartInstance.controlLimitSeries;
 
   for(let key in spcData) {
 
     if(spcData[key]) {
-      if(spcData[key].length > 0 && controlLimits[key]._meta[0].data.length === spcData[key].length){
-        controlLimits[key]._meta[0].data.shift(1);
+      if(spcData[key].length > 0 && controlLimits[key]._meta[chartInstance.id].data.length === spcData[key].length){
+        controlLimits[key]._meta[chartInstance.id].data.shift(1);
       }
     }
 
@@ -167,22 +167,47 @@ function updateSPCDatas(chartInstance) {
   }
 }
 
-function updateSeriesDatas(chartInstance) {
-  let seriesData = chartInstance.data.seriesData;
 
-  if(!seriesData || seriesData.length === 0)
-    seriesData = [null];
-
-  for(let key in seriesData) {
-
-    if(seriesData[key]) {
-      if(seriesData[key].length > 0 && chartInstance.seriesData[key]._meta[0].data.length === seriesData[key].length){
-        chartInstance.seriesData[key]._meta[0].data.shift(1);
-      }
-    }
-
-    chartInstance.seriesData[key].data = seriesData[key] || [];
+function updatePointColor(chartInstance) {
+  for(let i in chartInstance.chartSeries) {
+    checkOOC(chartInstance, i);
   }
+  console.log(chartInstance.chartSeries[0]._meta[chartInstance.id].data[0]._model.borderColor)
+  chartInstance.chartSeries[0]._meta[chartInstance.id].data[0]._model.borderColor="rgba(255,0,0,1)"
+}
+
+function checkOOC(dataArr, spcDataObject, currIndex) {
+  console.log(dataArr, spcDataObject, currIndex);
+  // var spcData = chartInstance.data.spcData;
+  //
+  // for(let i in chartInstance.chartSeries._meta) {
+  //
+  //   if(chartInstance.chartSeries._meta[i].data[index] > spcData[i]){
+  //
+  //   }
+  // }
+}
+
+function checkOOCs(chartInstance) {
+  let spcData = chartInstance.config.data.spcData;
+  let seriesData = chartInstance.config.data.seriesData;
+
+  for (let i in seriesData[0].data) {
+    checkOOC(seriesData[0].data, spcData, i);
+  }
+
+  // for(let i in seriesData) {
+  //   let data = seriesData[i]
+  //   console.log(chartInstance)
+  //   console.log(chartInstance.chartSeries[i]._meta[chartInstance.id].data)
+  //
+  // }
+  //
+  // console.log(chartInstance)
+  // for(let i in chartInstance.chartSeries) {
+  //   let d = chartInstance.chartSeries[i]
+  //
+  // }
 }
 
 Chart.plugins.register({
@@ -198,44 +223,22 @@ Chart.plugins.register({
     if(chartInstance.config.type === "controlChart"){
       var spcData = chartInstance.data.spcData;
       let seriesData = chartInstance.data.seriesData;
-      let controlLimits = chartInstance.controlLimits;
+      let controlLimits = chartInstance.controlLimitSeries;
 
-      if(!spcData || Object.keys(spcData).length === 0)
+      if(!spcData || Object.keys(spcData).length === 0) {
         spcData = {
           ucl : null,
           cl: null,
           lcl : null
         }
+      }
 
       updateSPCDatas(chartInstance);
-
-      // for(let key in spcData) {
-      //
-      //   if(spcData[key]) {
-      //     if(spcData[key].length > 0 && controlLimits[key]._meta[0].data.length === spcData[key].length){
-      //       controlLimits[key]._meta[0].data.shift(1);
-      //     }
-      //   }
-      //
-      //   controlLimits[key].data = spcData[key] || [];
-      // }
-
-      updateSeriesDatas(chartInstance);
-
-      // if(!seriesData || seriesData.length === 0)
-      //   seriesData = [null];
-      //
-      // for(let key in seriesData) {
-      //
-      //   if(seriesData[key]) {
-      //     if(seriesData[key].length > 0 && chartInstance.seriesData[key]._meta[0].data.length === seriesData[key].length){
-      //       chartInstance.seriesData[key]._meta[0].data.shift(1);
-      //     }
-      //   }
-      //
-      //   chartInstance.seriesData[key].data = seriesData[key] || [];
-      // }
     }
+  },
+  afterUpdate: function(chartInstance){
+    checkOOCs(chartInstance);
+    // updatePointColor(chartInstance);
   }
 });
 
