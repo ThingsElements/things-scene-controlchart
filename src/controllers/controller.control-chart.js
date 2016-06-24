@@ -84,7 +84,7 @@ function generateUpperControlLine (chartInstance) {
   var data = [];
   var dataLength = chartInstance.data.labels.length;
 
-  var spcData = chartInstance.data.spcData;
+  var spcData = chartInstance.data.rawData.spcData;
   if(spcData){
     data = spcData.ucl;
   }
@@ -96,7 +96,7 @@ function generateLowerControlLine(chartInstance) {
   var data = [];
   var dataLength = chartInstance.data.labels.length;
 
-  var spcData = chartInstance.data.spcData;
+  var spcData = chartInstance.data.rawData.spcData;
   if(spcData){
     data = spcData.lcl;
   }
@@ -108,7 +108,7 @@ function generateCenterLine(chartInstance) {
   var data = [];
   var dataLength = chartInstance.data.labels.length;
 
-  var spcData = chartInstance.data.spcData;
+  var spcData = chartInstance.data.rawData.spcData;
   if(spcData){
     data = spcData.cl;
   }
@@ -152,7 +152,7 @@ function generateSPCLine(chart, data, options) {
 }
 
 function updateSPCDatas(chartInstance) {
-  var spcData = chartInstance.data.spcData;
+  var spcData = chartInstance.data.rawData.spcData;
   let controlLimits = chartInstance.controlLimitSeries;
 
   for(let key in spcData) {
@@ -221,8 +221,8 @@ Chart.plugins.register({
 
   beforeUpdate : function(chartInstance){
     if(chartInstance.config.type === "controlChart"){
-      var spcData = chartInstance.data.spcData;
-      let seriesData = chartInstance.data.seriesData;
+      var spcData = chartInstance.data.rawData.spcData;
+      let seriesData = chartInstance.data.rawData.seriesData;
       let controlLimits = chartInstance.controlLimitSeries;
 
       if(!spcData || Object.keys(spcData).length === 0) {
@@ -237,7 +237,7 @@ Chart.plugins.register({
     }
   },
   afterUpdate: function(chartInstance){
-    checkOOCs(chartInstance);
+    // checkOOCs(chartInstance);
     // updatePointColor(chartInstance);
   }
 });
