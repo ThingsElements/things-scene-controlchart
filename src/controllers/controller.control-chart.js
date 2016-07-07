@@ -32,11 +32,6 @@ Chart.defaults.controlChart.legend = {
 };
 
 function initControlChart(chartInstance) {
-  chartInstance.chartSeries = [];
-
-  for(let dataset of chartInstance.data.datasets) {
-    chartInstance.chartSeries.push(dataset);
-  }
 
   chartInstance.controlLimitSeries = {
     ucl : null,
@@ -48,8 +43,8 @@ function initControlChart(chartInstance) {
     lsl : null
   };
 
-  chartInstance.chart.width = chartInstance.width;
-  chartInstance.chart.height = chartInstance.width;
+  // chartInstance.chart.width = chartInstance.width;
+  // chartInstance.chart.height = chartInstance.width;
 }
 
 function excludeNullValueLabel(chartInstance) {
@@ -89,7 +84,10 @@ function generateUpperControlLine (chartInstance) {
     data = spcData.ucl;
   }
 
-  chartInstance.controlLimitSeries.ucl = generateSPCLine(chartInstance, data);
+  chartInstance.controlLimitSeries.ucl = generateSPCLine(chartInstance, data, {
+    isControlLine: true,
+    label: 'ucl'
+  });
 }
 
 function generateLowerControlLine(chartInstance) {
@@ -101,7 +99,10 @@ function generateLowerControlLine(chartInstance) {
     data = spcData.lcl;
   }
 
-  chartInstance.controlLimitSeries.lcl = generateSPCLine(chartInstance, data);
+  chartInstance.controlLimitSeries.lcl = generateSPCLine(chartInstance, data, {
+    isControlLine : true,
+    label: 'lcl'
+  });
 }
 
 function generateCenterLine(chartInstance) {
@@ -113,34 +114,55 @@ function generateCenterLine(chartInstance) {
     data = spcData.cl;
   }
 
+  var borderColor = "rgba(238,114,72,1)";
+  var borderDash = [5, 5];
+
+  if(chartInstance.options.spc){
+    borderColor = chartInstance.options.spc.centerLineColor || borderColor
+    borderDash = chartInstance.options.spc.centerLineDash || borderDash
+  }
+
   chartInstance.controlLimitSeries.cl = generateSPCLine(chartInstance, data, {
-    borderColor: "rgba(25,220,150,1)",
-    borderWidth: 2,
-    borderDash: [0]
+    borderColor: borderColor,
+    borderWidth: 1,
+    borderDash: borderDash,
+    backgroundColor: borderColor,
+    pointHoverBackgroundColor: borderColor,
+    label: 'cl'
   });
 }
 
 function generateSPCLine(chart, data, options) {
+
+  var borderColor = "rgba(238,114,72,1)";
+  var borderDash = [5, 5];
+
+  if(chart.options.spc){
+    borderColor = chart.options.spc.limitBorderColor || borderColor
+    borderDash = chart.options.spc.borderDash || borderDash
+  }
+
   var obj = {
     showInLegend: false,
     fill: false,
     lineTension: 0,
-    borderWidth: 1,
-    borderDash: [10, 10, 2, 10],
+    borderWidth: 2,
+    borderDash: borderDash,
     // borderDashOffset: 5,
     backgroundColor: "rgba(220,92,92,0.4)",
-    borderColor: "rgba(220,92,92,1)",
+    borderColor: borderColor,
     borderCapStyle: 'butt',
     borderJoinStyle: 'miter',
-    pointBorderColor: "rgba(220,92,92,1)",
+    pointBorderColor: borderColor,
     pointBackgroundColor: "#fff",
     pointBorderWidth: 0,
     pointHoverRadius: 0,
-    pointHoverBackgroundColor: "rgba(220,92,92,1)",
+    pointHoverBackgroundColor: borderColor,
     pointHoverBorderColor: "rgba(220,220,220,1)",
     pointHoverBorderWidth: 0,
     pointRadius: 0,
     pointHitRadius: 0,
+    spanGaps: true,
     data: data || []
   };
 
@@ -236,11 +258,94 @@ Chart.plugins.register({
       updateSPCDatas(chartInstance);
     }
   },
+
   afterUpdate: function(chartInstance){
-    // checkOOCs(chartInstance);
-    // updatePointColor(chartInstance);
+
+  },
+
+
+  // TODO: 아래의 로직을 beforeRender와 beforeDraw중 어디에서 수행하는 것이 더 적합할지 고려해야함.
+  beforeRender : function(chartInstance){
+    var data = chartInstance.data.rawData.seriesData[0];
+    var spcData = chartInstance.data.rawData.spcData;
+
+    for (var i in data) {
+      var seriesData = data[i];
+      seriesData = typeof seriesData == 'object' ? seriesData.y : seriesData;
+
+      var ucl = spcData.ucl[i];
+      var lcl = spcData.lcl[i];
+
+      if((seriesData >= ucl) || (seriesData <= lcl)) {
+
+        var borderColor = 'rgba(238,114,72,1)';
+        var backgroundColor = 'yellow';
+        var pointRadius = 5;
+
+        if(chartInstance.options.spc) {
+          borderColor = chartInstance.options.spc.oocColor || borderColor;
+          backgroundColor = chartInstance.options.spc.oocBackgroundColor || backgroundColor;
+          pointRadius = chartInstance.options.spc.oocSize || pointRadius;
+        }
+
+        if(chartInstance.getDatasetMeta(0).data[i]) {
+          chartInstance.getDatasetMeta(0).data[i]._model.borderColor = borderColor
+          chartInstance.getDatasetMeta(0).data[i]._model.backgroundColor = backgroundColor
+          chartInstance.getDatasetMeta(0).data[i]._model.radius = pointRadius
+        }
+
+      }
+
+    }
   }
 });
+
+if(!window.scene || !global.scene) {
+  function updateSeriesDatas(chartInstance) {
+    if (!chartInstance.data.rawData) {
+      return;
+    }
+
+    let seriesData = chartInstance.data.rawData.seriesData;
+    let chartId = chartInstance.id;
+
+    if(!seriesData || seriesData.length === 0)
+      seriesData = [null];
+
+    for(let key in seriesData) {
+      if(chartInstance.data.datasets[key])
+        chartInstance.data.datasets[key].data = seriesData[key] || [];
+    }
+  }
+
+  function updateLabelDatas(chartInstance){
+    let labelData = chartInstance.data.rawData.labelData;
+    chartInstance.config.data.labels = labelData || [];
+  }
+
+  Chart.plugins.register({
+    beforeInit : function(chartInstance){
+
+      // chartInstance.chartSeries = [];
+      //
+      // for(let dataset of chartInstance.data.datasets) {
+      //   chartInstance.chartSeries.push(dataset);
+      // }
+    },
+    beforeUpdate : function(chartInstance){
+      if (!chartInstance.data.rawData) {
+        return;
+      }
+
+      let seriesData = chartInstance.data.rawData.seriesData;
+      updateLabelDatas(chartInstance);
+      updateSeriesDatas(chartInstance);
+    },
+    beforeRender: function(chartInstance){
+
+    }
+  });
+}
 
 export default class controlChart extends Chart.controllers.line {
 

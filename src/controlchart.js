@@ -5,6 +5,4 @@ Chart.ControlChart = Control
 Chart.controllers.controlChart = controlChartController
 Chart.defaults.global.maintainAspectRatio = false;
 
-var { Component, Rect } = scene
-
 export { Chart }

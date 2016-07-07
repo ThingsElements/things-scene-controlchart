@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Study Chart.js - line2</title>
+</head>
+<body>
+  <canvas id="myChart" width="600" height="400"></canvas>
+  <div>
+    <input type="button" value="Data Bind" onclick="bindData()">
+    <input type="button" value="Add Data" onclick="addData()">
+    <input type="button" value="Start Live Chart" onclick="startLive()">
+    <input type="button" value="Stop Live Chart" onclick="stopLive()">
+    <input type="button" value="Data Unbind" onclick="bindData(false)">
+  </div>
+
+  <script src="../bower_components/Chart.js/dist/Chart.bundle.js" charset="utf-8"></script>
+  <script src="../things-scene-controlchart.js" charset="utf-8"></script>
+  <script type="text/javascript">
+  var canvas = document.getElementById('myChart');
+  var ctx = canvas.getContext('2d');
+
+  var values = [
+      [{
+      x: "January",
+      y : 65
+    }, {
+      x : "February",
+      y : 59
+    }, {
+      x : "March",
+      y : 80
+    }, {
+      x : "April",
+      y : 81
+    }, {
+      x : "May",
+      y : 56
+    }, {
+      x : "June",
+      y : 55
+    }, {
+      x : "July",
+      y : 40
+    }]
+  ];
+  // var values = [
+  //   [65, 59, 80, 81, 56, 55, 40]
+  // ];
+
+  var spcData = {
+    ucl: [70, 70, 70, 65, 65, 65, 65],
+    lcl: [50, 50, 50, 55, 55, 55, 55],
+    cl: [60, 60, 60, 60, 60, 60, 60]
+  };
+
+  const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  var currYear = 2016;
+
+  var model = {
+    labels: [],
+    datasets: [
+      {
+        label: "My First dataset",
+        fill: false,
+        lineTension: 0.1,
+        backgroundColor: "rgba(102,102,102,0.4)",
+        borderColor: "rgba(102,102,102,1)",
+        borderCapStyle: 'butt',
+        borderDash: [],
+        borderDashOffset: 0.0,
+        borderJoinStyle: 'miter',
+        pointBorderColor: "rgba(102,102,102,1)",
+        pointBackgroundColor: "#fff",
+        pointBorderWidth: 1,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: "rgba(102,102,102,1)",
+        pointHoverBorderColor: "rgba(220,220,220,1)",
+        pointHoverBorderWidth: 2,
+        pointRadius: 1,
+        pointHitRadius: 10,
+        data : []
+      }
+    ],
+    rawData: {
+      spcData: spcData,
+      seriesData : values,
+      labelData : [["January", currYear], "February", "March", "April", "May", "June", "July"]
+    }
+  };
+
+
+  var myChart = new Chart(ctx, {
+    type: 'controlChart',
+    data: model,
+    options: {
+      scales : {
+        xAxes : [{
+          type : 'category'
+        }]
+      }
+    }
+  });
+
+  function bindData(isBind) {
+
+    if (isBind !== false) {
+      myChart.data.rawData.spcData = spcData;
+      myChart.data.rawData.seriesData = values;
+    } else {
+      myChart.data.rawData.spcData = {};
+      myChart.data.rawData.seriesData = [];
+    }
+
+    myChart.update();
+  }
+
+  function addData() {
+    var lastMonth = model.labels[model.labels.length - 1];
+    var lastMonthIdx = MONTHS.indexOf(typeof lastMonth == 'object' ? lastMonth[0] : lastMonth);
+    var month = MONTHS[(lastMonthIdx + 1) % MONTHS.length];
+    model.labels.push(month === "January" ? [month, ++currYear] : month);
+
+    if(model.labels.length > 20)
+      model.labels.shift(1);
+
+    let controlLimitAddVal = Math.floor(Math.random() * 10) - 5;
+
+    for(let key in spcData) {
+      let controlLimit = myChart.data.rawData.spcData[key];
+
+      var val = controlLimit[0];
+
+      if( (controlLimit.length -1) % 5 === 0 ){
+        if(key === 'ucl')
+          val += controlLimitAddVal;
+        else if (key === 'lcl')
+          val -= controlLimitAddVal;
+      }
+      else {
+        val = controlLimit[controlLimit.length-1];
+      }
+
+      controlLimit.push(val);
+      if(controlLimit.length > 20){
+        controlLimit.shift(1);
+        // myChart.data.metaData.shift(1);
+      }
+    }
+
+    for(let i in values) {
+      myChart.data.rawData.seriesData[i].push(Math.floor(Math.random() * 40) + 40);
+      if(myChart.data.rawData.seriesData[i].length > 20){
+        myChart.data.rawData.seriesData[i].shift(1);
+        // myChart.data.seriesData[i].metaData.shift(1);
+      }
+    }
+
+    myChart.update();
+  }
+
+  var liveInterval = null;
+
+  function startLive() {
+    if(liveInterval !== null)
+      return;
+
+    liveInterval = setInterval(function(){
+      addData();
+    }, 1000);
+    addData();
+  }
+
+  function stopLive() {
+    if(!liveInterval)
+      return;
+
+    clearInterval(liveInterval);
+    liveInterval = null;
+  }
+
+  </script>
+</body>
+</html>
