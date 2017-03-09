@@ -79,6 +79,9 @@ function generateUpperControlLine (chartInstance) {
   var data = [];
   var dataLength = chartInstance.data.labels.length;
 
+  if(!chartInstance.data.rawData)
+    return
+
   var spcData = chartInstance.data.rawData.spcData;
   if(spcData){
     data = spcData.ucl;
@@ -91,6 +94,9 @@ function generateUpperControlLine (chartInstance) {
 }
 
 function generateLowerControlLine(chartInstance) {
+  if(!chartInstance.data.rawData)
+    return
+
   var data = [];
   var dataLength = chartInstance.data.labels.length;
 
@@ -106,6 +112,9 @@ function generateLowerControlLine(chartInstance) {
 }
 
 function generateCenterLine(chartInstance) {
+  if(!chartInstance.data.rawData)
+    return
+
   var data = [];
   var dataLength = chartInstance.data.labels.length;
 
@@ -174,6 +183,9 @@ function generateSPCLine(chart, data, options) {
 }
 
 function updateSPCDatas(chartInstance) {
+  if(!chartInstance.data.rawData)
+    return
+
   var spcData = chartInstance.data.rawData.spcData;
   let controlLimits = chartInstance.controlLimitSeries;
 
@@ -232,73 +244,85 @@ function checkOOCs(chartInstance) {
   // }
 }
 
-Chart.plugins.register({
-  beforeInit : function(chartInstance){
-    if(chartInstance.config.type === "controlChart"){
-      initControlChart(chartInstance);
-      excludeNullValueLabel(chartInstance);
-      generateSpecLines(chartInstance);
-    }
-  },
-
-  beforeUpdate : function(chartInstance){
-    if(chartInstance.config.type === "controlChart"){
-      var spcData = chartInstance.data.rawData.spcData;
-      let seriesData = chartInstance.data.rawData.seriesData;
-      let controlLimits = chartInstance.controlLimitSeries;
-
-      if(!spcData || Object.keys(spcData).length === 0) {
-        spcData = {
-          ucl : null,
-          cl: null,
-          lcl : null
-        }
-      }
-
-      updateSPCDatas(chartInstance);
-    }
-  },
-
-  afterUpdate: function(chartInstance){
-
-  },
-
-
-  // TODO: 아래의 로직을 beforeRender와 beforeDraw중 어디에서 수행하는 것이 더 적합할지 고려해야함.
-  beforeRender : function(chartInstance){
-    var data = chartInstance.data.rawData.seriesData[0];
-    var spcData = chartInstance.data.rawData.spcData;
-
-    for (var i in data) {
-      var seriesData = data[i];
-      seriesData = typeof seriesData == 'object' ? seriesData.y : seriesData;
-
-      var ucl = spcData.ucl[i];
-      var lcl = spcData.lcl[i];
-
-      if((seriesData >= ucl) || (seriesData <= lcl)) {
-
-        var borderColor = 'rgba(238,114,72,1)';
-        var backgroundColor = 'yellow';
-        var pointRadius = 5;
-
-        if(chartInstance.options.spc) {
-          borderColor = chartInstance.options.spc.oocColor || borderColor;
-          backgroundColor = chartInstance.options.spc.oocBackgroundColor || backgroundColor;
-          pointRadius = chartInstance.options.spc.oocSize || pointRadius;
-        }
-
-        if(chartInstance.getDatasetMeta(0).data[i]) {
-          chartInstance.getDatasetMeta(0).data[i]._model.borderColor = borderColor
-          chartInstance.getDatasetMeta(0).data[i]._model.backgroundColor = backgroundColor
-          chartInstance.getDatasetMeta(0).data[i]._model.radius = pointRadius
-        }
-
-      }
-
-    }
-  }
-});
+// Chart.plugins.register({
+//   beforeInit : function(chartInstance){
+//     if(chartInstance.config.type != "controlChart")
+//       return
+//
+//     initControlChart(chartInstance);
+//     excludeNullValueLabel(chartInstance);
+//     generateSpecLines(chartInstance);
+//   },
+//
+//   beforeUpdate : function(chartInstance){
+//     if(chartInstance.config.type != "controlChart")
+//       return
+//
+//     if(!chartInstance.data.rawData)
+//       return
+//
+//     var spcData = chartInstance.data.rawData.spcData;
+//     let seriesData = chartInstance.data.rawData.seriesData;
+//     let controlLimits = chartInstance.controlLimitSeries;
+//
+//     if(!spcData || Object.keys(spcData).length === 0) {
+//       spcData = {
+//         ucl : null,
+//         cl: null,
+//         lcl : null
+//       }
+//     }
+//
+//     updateSPCDatas(chartInstance);
+//
+//   },
+//
+//   afterUpdate: function(chartInstance){
+//
+//   },
+//
+//
+//   // TODO: 아래의 로직을 beforeRender와 beforeDraw중 어디에서 수행하는 것이 더 적합할지 고려해야함.
+//   beforeRender : function(chartInstance){
+//     if(chartInstance.config.type != "controlChart")
+//       return
+//
+//     if(!chartInstance.data.rawData)
+//       return
+//
+//     var data = chartInstance.data.rawData.seriesData[0];
+//     var spcData = chartInstance.data.rawData.spcData;
+//
+//     for (var i in data) {
+//       var seriesData = data[i];
+//       seriesData = typeof seriesData == 'object' ? seriesData.y : seriesData;
+//
+//       var ucl = spcData.ucl[i];
+//       var lcl = spcData.lcl[i];
+//
+//       if((seriesData >= ucl) || (seriesData <= lcl)) {
+//
+//         var borderColor = 'rgba(238,114,72,1)';
+//         var backgroundColor = 'yellow';
+//         var pointRadius = 5;
+//
+//         if(chartInstance.options.spc) {
+//           borderColor = chartInstance.options.spc.oocColor || borderColor;
+//           backgroundColor = chartInstance.options.spc.oocBackgroundColor || backgroundColor;
+//           pointRadius = chartInstance.options.spc.oocSize || pointRadius;
+//         }
+//
+//         if(chartInstance.getDatasetMeta(0).data[i]) {
+//           chartInstance.getDatasetMeta(0).data[i]._model.borderColor = borderColor
+//           chartInstance.getDatasetMeta(0).data[i]._model.backgroundColor = backgroundColor
+//           chartInstance.getDatasetMeta(0).data[i]._model.radius = pointRadius
+//         }
+//
+//       }
+//
+//     }
+//   }
+// });
 
 if(!window.scene || !global.scene) {
   function updateSeriesDatas(chartInstance) {
@@ -319,52 +343,65 @@ if(!window.scene || !global.scene) {
   }
 
   function updateLabelDatas(chartInstance){
+    if(!chartInstance.data.rawData)
+      return
+
     let labelData = chartInstance.data.rawData.labelData;
     chartInstance.config.data.labels = labelData || [];
   }
 
-  Chart.plugins.register({
-    beforeInit : function(chartInstance){
-
-      // chartInstance.chartSeries = [];
-      //
-      // for(let dataset of chartInstance.data.datasets) {
-      //   chartInstance.chartSeries.push(dataset);
-      // }
-    },
-    beforeUpdate : function(chartInstance){
-      if (!chartInstance.data.rawData) {
-        return;
-      }
-
-      let seriesData = chartInstance.data.rawData.seriesData;
-      updateLabelDatas(chartInstance);
-      updateSeriesDatas(chartInstance);
-    },
-    beforeRender: function(chartInstance){
-
-    }
-  });
+  // Chart.plugins.register({
+  //   beforeInit : function(chartInstance){
+  //
+  //     // chartInstance.chartSeries = [];
+  //     //
+  //     // for(let dataset of chartInstance.data.datasets) {
+  //     //   chartInstance.chartSeries.push(dataset);
+  //     // }
+  //   },
+  //   beforeUpdate : function(chartInstance){
+  //     if (!chartInstance.data.rawData) {
+  //       return;
+  //     }
+  //
+  //     let seriesData = chartInstance.data.rawData.seriesData;
+  //     updateLabelDatas(chartInstance);
+  //     updateSeriesDatas(chartInstance);
+  //   },
+  //   beforeRender: function(chartInstance){
+  //
+  //   }
+  // });
 }
 
 export default class controlChart extends Chart.controllers.line {
 
   constructor(chart, datasetIndex) {
-
     super(chart, datasetIndex);
-
   }
 
-  static get datasetElementType() {
+  get datasetElementType() {
     return Chart.elements.Line
   }
 
-  static get dataElementType() {
+  get dataElementType() {
     return Chart.elements.Point
   }
 
   initialize(chart, datasetIndex) {
     super.initialize.call(this, chart, datasetIndex);
+  }
+
+  update(reset) {
+    super.update(reset)
+  }
+
+  draw(ease) {
+    super.draw(ease);
+  }
+
+  setHoverStyle(elements) {
+
   }
 
 }

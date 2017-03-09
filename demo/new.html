@@ -1,0 +1,402 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>things-scene-controlchart Demo</title>
+    <script src="../../webcomponentsjs/webcomponents-lite.min.js"></script>
+
+    <link rel="import" href="../../things-scene-viewer/things-scene-viewer.html">
+    <link rel="import" href="../../things-scene-viewer/things-scene-layer.html">
+    <link rel="import" href="../../things-scene-viewer/things-scene-handler.html">
+
+    <link rel="import" href="../../things-designer-elements/things-editor-color.html">
+    <link rel="import" href="../../things-designer-elements/things-editor-color-stops.html">
+    <link rel="import" href="../../things-scene-modeler/things-scene-properties.html">
+
+    <script src="../../Chart.JS/dist/Chart.js"></script>
+    <link rel="import" href="../../things-scene-chartjs/things-scene-chartjs.html">
+    <link rel="import" href="./things-scene-controlchart.html">
+
+    <style is="custom-style">
+
+    @font-face {
+      font-family: "Bitstream Vera Serif Bold";
+      src: url("fonts/VeraSeBd.ttf");
+    }
+
+    things-scene-viewer {
+      display: block;
+      width: 1400px;
+      height: 680px;
+    }
+    </style>
+  </head>
+  <body unresolved>
+
+    <template is="dom-bind" id="app">
+      <p>An example of <code>&lt;things-scene-controlchart&gt;</code>:</p>
+
+      <things-scene-viewer id='scene'
+                           scene='{{scene}}'
+                           selected='{{selected}}'
+                           model='[[model]]'
+                           mode="1">
+        <things-scene-layer type="selection-layer"></things-scene-layer>
+        <things-scene-layer type="modeling-layer"></things-scene-layer>
+        <things-scene-handler type="text-editor"></things-scene-handler>
+        <things-scene-handler type="move-handler"></things-scene-handler>
+      </things-scene-viewer>
+
+      <things-scene-properties scene="[[scene]]"
+                               selected="[[selected]]"
+                               model="{{target}}"
+                               bounds="{{bounds}}">
+        <fieldset>
+          <legend>controlchart properties</legend>
+          <label>top title</label>
+          <input type="text" value="{{target.topTitle::change}}"/>
+          <label>bottom title</label>
+          <input type="text" value="{{target.bottomTitle::change}}"/>
+          <label>left title</label>
+          <input type="text" value="{{target.leftTitle::change}}"/>
+          <label>USL</label>
+          <input type="number" value-as-number="{{target.usl::change}}" min="0" max="1000" step="1"/>
+          <label>LSL</label>
+          <input type="number" value-as-number="{{target.lsl::change}}" min="0" max="1000" step="1"/>
+          <label>TARGET</label>
+          <input type="number" value-as-number="{{target.target::change}}" min="0" max="1000" step="1"/>
+          <input type="checkbox" checked="{{target.show3SigmaLine::change}}" required>show 3-sigma line
+          <input type="checkbox" checked="{{target.showNormalLine::change}}" required>show normal line
+          <input type="checkbox" checked="{{target.showSpecLimit::change}}" required>show spec line
+          <input type="checkbox" checked="{{target.showGridLine::change}}" required>show grid line
+          <input type="checkbox" checked="{{target.showBarLabel::change}}" required>show bar label
+          <input type="checkbox" checked="{{target.showSubXAxis::change}}" required>show sub Xaxis
+          <input type="checkbox" checked="{{target.autoScaleX::change}}" required>auto scale-x
+          <input type="checkbox" checked="{{target.autoScaleY::change}}" required>auto scale-y
+          <label>precision</label>
+          <input type="number" value-as-number="{{target.precision::change}}" min="0" max="10" step="1"/>
+          <label>min-x</label>
+          <input type="number" value-as-number="{{target.minX::change}}" min="0" max="10" step="1"/>
+          <label>max-x</label>
+          <input type="number" value-as-number="{{target.maxX::change}}" min="0" max="1000" step="1"/>
+          <label>min-y</label>
+          <input type="number" value-as-number="{{target.minY::change}}" min="0" max="10" step="1"/>
+          <label>max-y</label>
+          <input type="number" value-as-number="{{target.maxY::change}}" min="0" max="1000" step="1"/>
+          <label>step-y</label>
+          <input type="number" value-as-number="{{target.stepY::change}}" min="0" max="10" step="1"/>
+        </fieldset>
+      </things-scene-properties>
+
+    </template>
+    <!-- <script src="../node_modules/Chart.Annotation.js/Chart.Annotation.js" charset="utf-8"></script> -->
+    <script>
+    var borderColor = "#000000"
+      window.addEventListener('WebComponentsReady', function(e) {
+        var app = document.querySelector('#app')
+
+        var dataCnt = 20;
+
+        var labels = [];
+        var hours = 8;
+        var minutes = 0;
+
+        for(var i = 0; i < dataCnt; i++) {
+          if(i%2 === 0){
+            hours ++;
+            minutes = '00';
+          } else {
+            minutes = '30';
+          }
+          var timeStr = hours + ":" + minutes;
+
+          labels.push(timeStr);
+        }
+
+        var uclXbar = [];
+        var lclXbar = [];
+        var clXbar = [];
+        var uclRbar = [];
+        var lclRbar = [];
+        var clRbar = [];
+
+        for(var i = 0; i < dataCnt; i ++ ){
+          uclXbar.push(34.88);
+          clXbar.push(29.42);
+          lclXbar.push(23.95);
+
+          uclRbar.push(20.03);
+          clRbar.push(9.47);
+          lclRbar.push(0);
+        }
+
+        var xBarData = [];
+        var rBarData = [];
+
+        for(var i = 0; i < dataCnt; i++) {
+          xBarData.push({
+            x: labels[i],
+            y: Math.floor(Math.random() * 13) - 6.5 + 29.42
+          });
+          rBarData.push({
+            x: labels[i],
+            y: Math.floor(Math.random() * 18) - 9 + 9.47
+          });
+        }
+
+
+        var data = {
+            labels: ["January", "February", "March", "April", "May", "June", "July"],
+            datasets: [
+              {
+                label: "Mean",
+                fill: false,
+                lineTension: 0,
+                backgroundColor: "rgba(255,255,255,1)",
+                borderColor: "rgba(79,127,193,1)",
+                borderCapStyle: 'butt',
+                borderDash: [],
+                borderDashOffset: 0.0,
+                borderJoinStyle: 'miter',
+                pointBorderColor: "rgba(79,127,193,1)",
+                pointBackgroundColor: "rgba(255,255,255,1)",
+                pointBorderWidth: 2,
+                pointHoverRadius: 5,
+                pointHoverBackgroundColor: "rgba(79,127,193,1)",
+                pointHoverBorderColor: "rgba(255,255,255,1)",
+                pointHoverBorderWidth: 2,
+                pointRadius: 3,
+                pointHitRadius: 10,
+                data : []
+              }
+            ],
+            rawData : {
+              labelData: labels,
+              spcData: {
+                ucl: uclXbar,
+                lcl: lclXbar,
+                cl: clXbar
+              },
+              seriesData : [
+                xBarData
+              ]
+            }
+        };
+
+        var data2 = {
+            labels: ["January", "February", "March", "April", "May", "June", "July"],
+            datasets: [
+              {
+                label: "Range",
+                fill: false,
+                lineTension: 0,
+                backgroundColor: "rgba(255,255,255,1)",
+                borderColor: "rgba(79,127,193,1)",
+                borderCapStyle: 'butt',
+                borderDash: [],
+                borderDashOffset: 0.0,
+                borderJoinStyle: 'miter',
+                pointBorderColor: "rgba(79,127,193,1)",
+                pointBackgroundColor: "rgba(255,255,255,1)",
+                pointBorderWidth: 1,
+                pointHoverRadius: 5,
+                pointHoverBackgroundColor: "rgba(79,127,193,1)",
+                pointHoverBorderColor: "rgba(255,255,255,1)",
+                pointHoverBorderWidth: 2,
+                pointRadius: 3,
+                pointHitRadius: 10,
+                data : []
+              },
+              {
+                type: 'controlChart',
+                label: "CL",
+                fill: false,
+                lineTension: 0,
+                borderColor: "green",
+                borderCapStyle: 'butt',
+                borderDash: [],
+                borderDashOffset: 0.0,
+                borderJoinStyle: 'miter',
+                pointBorderWidth: 0,
+                pointHoverRadius: 0,
+                pointHoverBorderWidth: 0,
+                pointRadius: 0,
+                pointHitRadius: 10,
+                steppedLine: true,
+                data : [6,6,6,6,6,6,6,6,6,6,6,6,6,6]
+              },
+              {
+                type: 'controlChart',
+                label: "UCL",
+                fill: false,
+                lineTension: 0,
+                backgroundColor: "rgba(255,255,255,1)",
+                borderColor: "red",
+                borderCapStyle: 'butt',
+                borderWidth: 1,
+                borderDash: [],
+                borderDashOffset: 0.0,
+                borderJoinStyle: 'miter',
+                pointBorderColor: "rgba(79,127,193,1)",
+                pointBackgroundColor: "rgba(255,255,255,1)",
+                pointBorderWidth: 1,
+                pointHoverRadius: 5,
+                pointHoverBackgroundColor: "rgba(79,127,193,1)",
+                pointHoverBorderColor: "rgba(255,255,255,1)",
+                pointHoverBorderWidth: 2,
+                pointRadius: 0,
+                pointHitRadius: 10,
+                steppedLine: true,
+                data : [9,9,9,9,9,9,9, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8]
+              },
+              {
+                type: 'controlChart',
+                label: "LCL",
+                fill: false,
+                lineTension: 0,
+                borderColor: "red",
+                borderCapStyle: 'butt',
+                borderWidth: 1,
+                borderDash: [],
+                borderDashOffset: 0.0,
+                borderJoinStyle: 'miter',
+                pointBorderWidth: 0,
+                pointHoverRadius: 0,
+                pointHoverBackgroundColor: "rgba(79,127,193,1)",
+                pointHoverBorderColor: "rgba(255,255,255,1)",
+                pointHoverBorderWidth: 0,
+                pointRadius: 0,
+                pointHitRadius: 10,
+                steppedLine: true,
+                data : [3,3,3,3,3,3,3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+              }
+            ],
+            rawData : {
+              labelData: labels,
+              spcData: {
+                ucl: uclRbar,
+                lcl: lclRbar,
+                cl: clRbar
+              },
+              seriesData : [
+                rBarData
+              ]
+            }
+        };
+
+        var options = {
+          tooltips: {
+            mode :'label'
+          },
+          hover : {
+            mode: 'label'
+          },
+          scales : {
+            xAxes : [{
+              type : 'category',
+              gridLines : {
+                display: false
+              },
+              ticks :{
+                fontSize : 11,
+                fontColor : '#999'
+              }
+            }],
+            yAxes: [{
+              gridLines : {
+                // display: false
+              },
+              ticks :{
+                fontSize : 11,
+                fontColor : '#999'
+              },
+              scaleLabel : {
+                display: true,
+                labelString: 'Mean'
+              }
+            }]
+          }
+        };
+
+        var options2 = {
+          tooltips: {
+            mode :'label'
+          },
+          scales : {
+            xAxes : [{
+              type : 'category',
+              gridLines : {
+                display: false
+              },
+              ticks :{
+                fontSize : 11,
+                fontColor : '#999'
+              }
+            }],
+            yAxes: [{
+              gridLines : {
+                // display: false
+              },
+              ticks :{
+                fontSize : 11,
+                fontColor : '#999'
+              },
+              scaleLabel : {
+                display: true,
+                labelString: 'Range'
+              }
+            }]
+          },
+          spc : {
+            limitColor : "#990000",
+            limitDash : [5, 5],
+            centerLineColor : "#009900",
+            centerLineDash : [0],
+            oocColor : "#00ff00",
+            oocBackgroundColor : "#cccccc",
+            oocSize : 10,
+          }
+        };
+
+        app.model = {
+          // fillStyle: '#0EB22A',
+          width: 1400,
+          height: 680,
+          components: [{
+            type: 'chartjs',
+            left : 20,
+            top : 40,
+            width : 1200,
+            height : 300,
+            chart : {
+              type : 'line',
+              data : data,
+              options: options
+            }
+          }, {
+            type: 'chartjs',
+            left : 20,
+            top : 380,
+            width : 1200,
+            height : 300,
+            chart : {
+              type : 'line',
+              data : data2,
+              options: options2
+            }
+          }]
+        }
+      });
+    </script>
+  </body>
+</html>
