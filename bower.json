@@ -1,6 +1,6 @@
 {
   "name": "things-scene-controlchart",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "authors": [
     "Hatio Lab. <heartyoh@hatiolab.com>"
   ],
@@ -18,7 +18,7 @@
     "/test/"
   ],
   "dependencies": {
-    "things-scene": "^0.7.0",
+    "things-scene-core": "ThingsElements/things-scene-core#^2.0.0",
     "chart.js": "npm:chart.js#^2.4.0"
   },
   "devDependencies": {
